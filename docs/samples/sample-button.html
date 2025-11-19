@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>sample-button sample</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 1.5rem; color: #1f2933; background-color: #f7f9fb; }
+    main { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 6px 18px rgba(31, 41, 51, 0.08); }
+    h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+    .description { margin: 0 0 1rem; color: #52616b; }
+    .sample { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>sample-button</h1>
+    <p class="description">Renders the primary button style with slotted text content.</p>
+    <section class="sample" aria-label="Rendered component sample">
+      <sample-button type="primary"><template shadowroot="open"><button class="button primary" type="button"><slot></slot></button></template>Click me</sample-button>
+    </section>
+  </main>
+</body>
+</html>

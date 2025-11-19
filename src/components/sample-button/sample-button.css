@@ -1,0 +1,32 @@
+:host {
+  display: inline-block;
+}
+
+.button {
+  font: inherit;
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.button.primary {
+  background-color: #2563eb;
+  color: #fff;
+  border-color: #1d4ed8;
+}
+
+.button.primary:hover {
+  background-color: #1d4ed8;
+}
+
+.button.secondary {
+  background-color: #fff;
+  color: #1f2933;
+  border-color: #cbd5e1;
+}
+
+.button.secondary:hover {
+  background-color: #f8fafc;
+}
