@@ -111,17 +111,33 @@ function stripHydrationArtifacts(markup: string): string {
   return cleaned.replace(/\s+>/g, '>');
 }
 
-function normalizeShadowRoot(markup: string): string {
+function flattenShadowRoot(markup: string): string {
   return markup
-    .replace(/<mock:shadow-root\b([^>]*)>/g, (_match, attrs: string) => {
-      const mode = /mode="(.*?)"/i.exec(attrs)?.[1] ?? 'open';
-      const delegatesFocus = /delegatesfocus="true"/i.test(attrs);
-      const delegatesAttr = delegatesFocus ? ' shadowrootdelegatesfocus="true"' : '';
+    .replace(/<mock:shadow-root\b[^>]*>/g, '')
+    .replace(/<\/mock:shadow-root>/g, '')
+    .replace(/<template\b[^>]*shadowroot[^>]*>/gi, '')
+    .replace(/<\/template>/gi, '');
+}
 
-      return `<template shadowroot="${mode}"${delegatesAttr}>`;
-    })
-    .replace(/<\/mock:shadow-root>/g, '</template>')
-    .replace(/shadowrootmode=/gi, 'shadowroot=');
+function extractSlotContent(sampleHtml: string): string | null {
+  const match = sampleHtml.match(/^[^>]*>([\s\S]*?)<\/[^>]+>\s*$/);
+  return match ? match[1].trim() : null;
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function resolveSlots(markup: string, sample: ComponentSample): string {
+  const slotContent = extractSlotContent(sample.html);
+  if (!slotContent) {
+    return markup;
+  }
+
+  const withSlotReplaced = markup.replace(/<slot\b[^>]*><\/slot>/g, slotContent);
+
+  const trailingLightDomPattern = new RegExp(`${escapeRegex(slotContent)}\\s*</${sample.component}>`, 'i');
+  return withSlotReplaced.replace(trailingLightDomPattern, `</${sample.component}>`);
 }
 
 function buildDocument(sample: ComponentSample, markup: string): string {
@@ -165,7 +181,7 @@ async function renderSample(sample: ComponentSample): Promise<string> {
   });
 
   const renderedMarkup = page.root?.outerHTML ?? page.body.innerHTML;
-  const cleanedMarkup = stripHydrationArtifacts(normalizeShadowRoot(renderedMarkup));
+  const cleanedMarkup = resolveSlots(stripHydrationArtifacts(flattenShadowRoot(renderedMarkup)), sample);
 
   return buildDocument(sample, cleanedMarkup);
 }
