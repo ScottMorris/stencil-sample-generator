@@ -16,6 +16,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src", "scripts", "stencil.config.ts", "stencil.internal.d.ts"],
+  "include": ["src", "scripts", "stencil.internal.d.ts"],
   "exclude": ["node_modules", "src/**/test/**/*"]
 }
