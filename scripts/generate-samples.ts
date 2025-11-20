@@ -1,5 +1,5 @@
 import { newSpecPage } from '@stencil/core/testing';
-import { mkdirSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { BUILD } from '@stencil/core/internal/app-data';
@@ -20,6 +20,11 @@ BUILD.taskQueue = false;
 const componentModulePaths: Record<string, string> = {
   'my-component': path.join(process.cwd(), 'dist', 'stencilsample', 'my-component.entry.js'),
   'sample-button': path.join(process.cwd(), 'dist', 'stencilsample', 'sample-button.entry.js'),
+};
+
+const componentStylePaths: Record<string, string> = {
+  'my-component': path.join(process.cwd(), 'src', 'components', 'my-component', 'my-component.css'),
+  'sample-button': path.join(process.cwd(), 'src', 'components', 'sample-button', 'sample-button.css'),
 };
 
 async function loadComponent(tagName: string): Promise<any> {
@@ -140,7 +145,26 @@ function resolveSlots(markup: string, sample: ComponentSample): string {
   return withSlotReplaced.replace(trailingLightDomPattern, `</${sample.component}>`);
 }
 
-function buildDocument(sample: ComponentSample, markup: string): string {
+function transformHostSelectors(css: string, tagName: string): string {
+  return css.replace(/:host\b/g, tagName);
+}
+
+function loadComponentStyles(tagName: string): string {
+  const cssPath = componentStylePaths[tagName];
+  if (!cssPath) {
+    return '';
+  }
+
+  try {
+    const css = readFileSync(cssPath, 'utf8');
+    return transformHostSelectors(css, tagName);
+  } catch (error) {
+    console.warn(`Warning: unable to read styles for ${tagName} at ${cssPath}:`, error);
+    return '';
+  }
+}
+
+function buildDocument(sample: ComponentSample, markup: string, componentCss: string): string {
   const description = sample.description
     ? `<p class="description">${sample.description}</p>`
     : '<p class="description">Rendered HTML sample generated with Stencil.</p>';
@@ -157,6 +181,7 @@ function buildDocument(sample: ComponentSample, markup: string): string {
     '    h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }',
     '    .description { margin: 0 0 1rem; color: #52616b; }',
     '    .sample { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; background: #f9fafb; }',
+    componentCss,
     '  </style>',
     '</head>',
     '<body>',
@@ -182,8 +207,9 @@ async function renderSample(sample: ComponentSample): Promise<string> {
 
   const renderedMarkup = page.root?.outerHTML ?? page.body.innerHTML;
   const cleanedMarkup = resolveSlots(stripHydrationArtifacts(flattenShadowRoot(renderedMarkup)), sample);
+  const componentCss = loadComponentStyles(sample.component);
 
-  return buildDocument(sample, cleanedMarkup);
+  return buildDocument(sample, cleanedMarkup, componentCss);
 }
 
 async function generateSamples(): Promise<void> {
