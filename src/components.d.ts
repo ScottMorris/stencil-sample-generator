@@ -20,6 +20,18 @@ export namespace Components {
          */
         "type": ButtonVariant;
     }
+    interface SampleInput {
+        /**
+          * Label displayed above the input field.
+          * @default 'Label'
+         */
+        "label": string;
+        /**
+          * Placeholder text shown inside the input.
+          * @default 'Type something...'
+         */
+        "placeholder": string;
+    }
 }
 declare global {
     interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {
@@ -34,9 +46,16 @@ declare global {
         prototype: HTMLSampleButtonElement;
         new (): HTMLSampleButtonElement;
     };
+    interface HTMLSampleInputElement extends Components.SampleInput, HTMLStencilElement {
+    }
+    var HTMLSampleInputElement: {
+        prototype: HTMLSampleInputElement;
+        new (): HTMLSampleInputElement;
+    };
     interface HTMLElementTagNameMap {
         "my-component": HTMLMyComponentElement;
         "sample-button": HTMLSampleButtonElement;
+        "sample-input": HTMLSampleInputElement;
     }
 }
 declare namespace LocalJSX {
@@ -54,9 +73,22 @@ declare namespace LocalJSX {
          */
         "type"?: ButtonVariant;
     }
+    interface SampleInput {
+        /**
+          * Label displayed above the input field.
+          * @default 'Label'
+         */
+        "label"?: string;
+        /**
+          * Placeholder text shown inside the input.
+          * @default 'Type something...'
+         */
+        "placeholder"?: string;
+    }
     interface IntrinsicElements {
         "my-component": MyComponent;
         "sample-button": SampleButton;
+        "sample-input": SampleInput;
     }
 }
 export { LocalJSX as JSX };
@@ -65,6 +97,7 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "my-component": LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
             "sample-button": LocalJSX.SampleButton & JSXBase.HTMLAttributes<HTMLSampleButtonElement>;
+            "sample-input": LocalJSX.SampleInput & JSXBase.HTMLAttributes<HTMLSampleInputElement>;
         }
     }
 }

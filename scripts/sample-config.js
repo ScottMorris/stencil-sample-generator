@@ -11,4 +11,10 @@ export const samples = [
     outputFile: 'sample-button.html',
     description: 'Renders the primary button style with slotted text content.',
   },
+  {
+    component: 'sample-input',
+    html: '<sample-input label="Name" placeholder="Jane Doe"></sample-input>',
+    outputFile: 'sample-input.html',
+    description: 'Softly-styled text input with label to mirror the sample button aesthetic.',
+  },
 ];

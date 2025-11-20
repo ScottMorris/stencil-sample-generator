@@ -20,11 +20,13 @@ BUILD.taskQueue = false;
 const componentModulePaths: Record<string, string> = {
   'my-component': path.join(process.cwd(), 'dist', 'stencilsample', 'my-component.entry.js'),
   'sample-button': path.join(process.cwd(), 'dist', 'stencilsample', 'sample-button.entry.js'),
+  'sample-input': path.join(process.cwd(), 'dist', 'stencilsample', 'sample-input.entry.js'),
 };
 
 const componentStylePaths: Record<string, string> = {
   'my-component': path.join(process.cwd(), 'src', 'components', 'my-component', 'my-component.css'),
   'sample-button': path.join(process.cwd(), 'src', 'components', 'sample-button', 'sample-button.css'),
+  'sample-input': path.join(process.cwd(), 'src', 'components', 'sample-input', 'sample-input.css'),
 };
 
 async function loadComponent(tagName: string): Promise<any> {
@@ -35,7 +37,7 @@ async function loadComponent(tagName: string): Promise<any> {
 
   const moduleUrl = pathToFileURL(modulePath).href;
   const module = await import(moduleUrl);
-  const component = module.my_component ?? module.sample_button ?? module.default;
+  const component = module.my_component ?? module.sample_button ?? module.sample_input ?? module.default;
 
   if (!component) {
     throw new Error(`Unable to resolve component export for tag: ${tagName}`);
@@ -45,46 +47,66 @@ async function loadComponent(tagName: string): Promise<any> {
   return component;
 }
 
-function attachMetadata(tagName: string, component: any) {
-  if (component.COMPILER_META) {
-    return;
-  }
+const metadataByTag: Record<string, any> = {
+  'my-component': createMetadata('my-component', ['div', 'p'], [
+    {
+      name: 'prop',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'prop',
+      state: false,
+      connected: false,
+      complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+  ]),
+  'sample-button': createMetadata('sample-button', ['button', 'slot'], [
+    {
+      name: 'type',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'type',
+      state: false,
+      connected: false,
+      complexType: { original: 'ButtonVariant', resolved: '"primary" | "secondary"', references: {} },
+    },
+  ]),
+  'sample-input': createMetadata('sample-input', ['label', 'span', 'input'], [
+    {
+      name: 'label',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'label',
+      state: false,
+      connected: false,
+      complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+    {
+      name: 'placeholder',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'placeholder',
+      state: false,
+      connected: false,
+      complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+  ]),
+};
 
-  const metadata = {
+function createMetadata(tagName: string, htmlTagNames: string[], properties: any[]) {
+  return {
     tagName,
     encapsulation: 'shadow',
     hasShadowDom: true,
     shadowDelegatesFocus: false,
-    htmlTagNames: ['div', 'p', 'button', 'slot'],
+    htmlTagNames,
     hasRenderFn: true,
     hasMode: false,
     hasModernPropertyDecls: true,
-    properties:
-      tagName === 'my-component'
-        ? [
-            {
-              name: 'prop',
-              type: 1,
-              mutable: false,
-              reflect: false,
-              attr: 'prop',
-              state: false,
-              connected: false,
-              complexType: { original: 'string', resolved: 'string', references: {} },
-            },
-          ]
-        : [
-            {
-              name: 'type',
-              type: 1,
-              mutable: false,
-              reflect: false,
-              attr: 'type',
-              state: false,
-              connected: false,
-              complexType: { original: "ButtonVariant", resolved: '"primary" | "secondary"', references: {} },
-            },
-          ],
+    properties,
     states: [],
     listeners: [],
     watchers: [],
@@ -98,6 +120,17 @@ function attachMetadata(tagName: string, component: any) {
     styles: [],
     formAssociated: false,
   } as const;
+}
+
+function attachMetadata(tagName: string, component: any) {
+  if (component.COMPILER_META) {
+    return;
+  }
+
+  const metadata = metadataByTag[tagName];
+  if (!metadata) {
+    throw new Error(`No metadata configured for tag: ${tagName}`);
+  }
 
   component.COMPILER_META = metadata;
 }

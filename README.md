@@ -76,3 +76,8 @@ npm run screenshot:sample-button
 
 The resulting image will be written to `docs/samples/sample-button.png` so you
 can preview it locally or add it to downstream documentation.
+
+## Additional notes
+
+- A styled input example is available as `sample-input`; mirror the config entry in both `scripts/sample-config.ts` and `scripts/sample-config.js` when adding more examples so the generator picks them up.
+- Stencil emits a `tsconfig.json "include" required` warning in dev builds; the current setup still builds and generates samples successfully.
