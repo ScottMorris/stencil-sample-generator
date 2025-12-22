@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build-components": "stencil build --dev",
-    "generate-samples": "npm run build-components && TS_NODE_COMPILER_OPTIONS='{\"module\":\"esnext\"}' ts-node --esm scripts/generate-samples.ts",
+    "generate-samples": "npm run build-components && tsx scripts/generate-samples.ts",
     "screenshot:sample-button": "node scripts/capture-sample-button.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,7 +23,7 @@
     "jest": "^30.2.0",
     "jest-environment-node": "^30.2.0",
     "puppeteer": "^24.30.0",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.3"
   }
 }
