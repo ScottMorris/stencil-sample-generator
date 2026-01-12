@@ -21,12 +21,20 @@ const componentModulePaths: Record<string, string> = {
   'my-component': path.join(process.cwd(), 'dist', 'stencilsample', 'my-component.entry.js'),
   'sample-button': path.join(process.cwd(), 'dist', 'stencilsample', 'sample-button.entry.js'),
   'sample-input': path.join(process.cwd(), 'dist', 'stencilsample', 'sample-input.entry.js'),
+  'sample-card': path.join(process.cwd(), 'dist', 'stencilsample', 'sample-card.entry.js'),
+  'sample-card-action': path.join(process.cwd(), 'dist', 'stencilsample', 'sample-card-action.entry.js'),
 };
 
 const componentStylePaths: Record<string, string> = {
   'my-component': path.join(process.cwd(), 'src', 'components', 'my-component', 'my-component.css'),
   'sample-button': path.join(process.cwd(), 'src', 'components', 'sample-button', 'sample-button.css'),
   'sample-input': path.join(process.cwd(), 'src', 'components', 'sample-input', 'sample-input.css'),
+  'sample-card': path.join(process.cwd(), 'src', 'components', 'sample-card', 'sample-card.css'),
+  'sample-card-action': path.join(process.cwd(), 'src', 'components', 'sample-card-action', 'sample-card-action.css'),
+};
+
+const componentDependencies: Record<string, string[]> = {
+  'sample-card': ['sample-card-action'],
 };
 
 async function loadComponent(tagName: string): Promise<any> {
@@ -37,7 +45,13 @@ async function loadComponent(tagName: string): Promise<any> {
 
   const moduleUrl = pathToFileURL(modulePath).href;
   const module = await import(moduleUrl);
-  const component = module.my_component ?? module.sample_button ?? module.sample_input ?? module.default;
+  const component =
+    module.my_component ??
+    module.sample_button ??
+    module.sample_input ??
+    module.sample_card ??
+    module.sample_card_action ??
+    module.default;
 
   if (!component) {
     throw new Error(`Unable to resolve component export for tag: ${tagName}`);
@@ -92,6 +106,70 @@ const metadataByTag: Record<string, any> = {
       state: false,
       connected: false,
       complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+  ]),
+  'sample-card': createMetadata('sample-card', ['article', 'header', 'div', 'p', 'span', 'slot'], [
+    {
+      name: 'heading',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'heading',
+      state: false,
+      connected: false,
+      complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+    {
+      name: 'summary',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'summary',
+      state: false,
+      connected: false,
+      complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+    {
+      name: 'status',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'status',
+      state: false,
+      connected: false,
+      complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+  ]),
+  'sample-card-action': createMetadata('sample-card-action', ['a', 'button'], [
+    {
+      name: 'label',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'label',
+      state: false,
+      connected: false,
+      complexType: { original: 'string', resolved: 'string', references: {} },
+    },
+    {
+      name: 'variant',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'variant',
+      state: false,
+      connected: false,
+      complexType: { original: 'ActionVariant', resolved: '"primary" | "ghost"', references: {} },
+    },
+    {
+      name: 'href',
+      type: 1,
+      mutable: false,
+      reflect: false,
+      attr: 'href',
+      state: false,
+      connected: false,
+      complexType: { original: 'string | undefined', resolved: 'string', references: {} },
     },
   ]),
 };
@@ -157,24 +235,79 @@ function flattenShadowRoot(markup: string): string {
     .replace(/<\/template>/gi, '');
 }
 
-function extractSlotContent(sampleHtml: string): string | null {
-  const match = sampleHtml.match(/^[^>]*>([\s\S]*?)<\/[^>]+>\s*$/);
-  return match ? match[1].trim() : null;
+function extractSlotContent(renderedMarkup: string, tagName: string): string | null {
+  const match = renderedMarkup.match(new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)</${tagName}>`, 'i'));
+  if (!match) {
+    return null;
+  }
+
+  let innerContent = match[1];
+  innerContent = innerContent.replace(/<mock:shadow-root\b[^>]*>[\s\S]*?<\/mock:shadow-root>/i, '');
+  innerContent = innerContent.replace(/<template\b[^>]*shadowroot[^>]*>[\s\S]*?<\/template>/i, '');
+
+  const trimmed = innerContent.trim();
+  return trimmed ? trimmed : null;
 }
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function resolveSlots(markup: string, sample: ComponentSample): string {
-  const slotContent = extractSlotContent(sample.html);
+type SlotContent = {
+  allContent: string;
+  defaultContent: string;
+  namedSlots: Record<string, string>;
+};
+
+function parseSlotContent(slotContent: string): SlotContent {
+  const namedSlots: Record<string, string[]> = {};
+  const slotRegex = /<([a-z0-9-]+)[^>]*\bslot="([^"]+)"[^>]*>[\s\S]*?<\/\1>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = slotRegex.exec(slotContent)) !== null) {
+    const [fullMatch, _tagName, slotName] = match;
+    if (!namedSlots[slotName]) {
+      namedSlots[slotName] = [];
+    }
+    namedSlots[slotName].push(fullMatch);
+  }
+
+  const defaultContent = slotContent.replace(slotRegex, '').trim();
+  const flattenedNamedSlots = Object.fromEntries(
+    Object.entries(namedSlots).map(([slotName, entries]) => [slotName, entries.join('')]),
+  );
+
+  return {
+    allContent: slotContent,
+    defaultContent,
+    namedSlots: flattenedNamedSlots,
+  };
+}
+
+function resolveSlots(markup: string, sample: ComponentSample, renderedMarkup: string): string {
+  const slotContent = extractSlotContent(renderedMarkup, sample.component);
   if (!slotContent) {
     return markup;
   }
 
-  const withSlotReplaced = markup.replace(/<slot\b[^>]*><\/slot>/g, slotContent);
+  const cleanedSlotContent = stripHydrationArtifacts(flattenShadowRoot(slotContent));
+  const { allContent, defaultContent, namedSlots } = parseSlotContent(cleanedSlotContent);
 
-  const trailingLightDomPattern = new RegExp(`${escapeRegex(slotContent)}\\s*</${sample.component}>`, 'i');
+  let withSlotReplaced = markup.replace(
+    /<slot\b[^>]*name="([^"]+)"[^>]*><\/slot>/g,
+    (_match, slotName: string) => namedSlots[slotName] ?? '',
+  );
+
+  withSlotReplaced = withSlotReplaced.replace(
+    /<slot\b(?![^>]*name=)[^>]*><\/slot>/g,
+    defaultContent,
+  );
+
+  if (!allContent) {
+    return withSlotReplaced;
+  }
+
+  const trailingLightDomPattern = new RegExp(`${escapeRegex(allContent)}\\s*</${sample.component}>`, 'i');
   return withSlotReplaced.replace(trailingLightDomPattern, `</${sample.component}>`);
 }
 
@@ -231,16 +364,17 @@ function buildDocument(sample: ComponentSample, markup: string, componentCss: st
 }
 
 async function renderSample(sample: ComponentSample): Promise<string> {
-  const component = await loadComponent(sample.component);
+  const componentTags = [sample.component, ...(componentDependencies[sample.component] ?? [])];
+  const components = await Promise.all(componentTags.map((tagName) => loadComponent(tagName)));
 
   const page = await newSpecPage({
-    components: [component],
+    components,
     html: sample.html,
   });
 
   const renderedMarkup = page.root?.outerHTML ?? page.body.innerHTML;
-  const cleanedMarkup = resolveSlots(stripHydrationArtifacts(flattenShadowRoot(renderedMarkup)), sample);
-  const componentCss = loadComponentStyles(sample.component);
+  const cleanedMarkup = resolveSlots(stripHydrationArtifacts(flattenShadowRoot(renderedMarkup)), sample, renderedMarkup);
+  const componentCss = componentTags.map((tagName) => loadComponentStyles(tagName)).filter(Boolean).join('\n');
 
   return buildDocument(sample, cleanedMarkup, componentCss);
 }

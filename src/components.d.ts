@@ -20,6 +20,39 @@ export namespace Components {
          */
         "type": ButtonVariant;
     }
+    interface SampleCard {
+        /**
+          * Headline for the card surface.
+          * @default 'Heading'
+         */
+        "heading": string;
+        /**
+          * Status badge label rendered in the header.
+          * @default 'Draft'
+         */
+        "status": string;
+        /**
+          * Supporting summary text displayed beneath the heading.
+          * @default 'Summary text goes here.'
+         */
+        "summary": string;
+    }
+    interface SampleCardAction {
+        /**
+          * Optional link target for the action.
+         */
+        "href"?: string;
+        /**
+          * Text label displayed for the action.
+          * @default 'Action'
+         */
+        "label": string;
+        /**
+          * Visual variant for the action control.
+          * @default 'primary'
+         */
+        "variant": ActionVariant;
+    }
     interface SampleInput {
         /**
           * Label displayed above the input field.
@@ -46,6 +79,18 @@ declare global {
         prototype: HTMLSampleButtonElement;
         new (): HTMLSampleButtonElement;
     };
+    interface HTMLSampleCardElement extends Components.SampleCard, HTMLStencilElement {
+    }
+    var HTMLSampleCardElement: {
+        prototype: HTMLSampleCardElement;
+        new (): HTMLSampleCardElement;
+    };
+    interface HTMLSampleCardActionElement extends Components.SampleCardAction, HTMLStencilElement {
+    }
+    var HTMLSampleCardActionElement: {
+        prototype: HTMLSampleCardActionElement;
+        new (): HTMLSampleCardActionElement;
+    };
     interface HTMLSampleInputElement extends Components.SampleInput, HTMLStencilElement {
     }
     var HTMLSampleInputElement: {
@@ -55,6 +100,8 @@ declare global {
     interface HTMLElementTagNameMap {
         "my-component": HTMLMyComponentElement;
         "sample-button": HTMLSampleButtonElement;
+        "sample-card": HTMLSampleCardElement;
+        "sample-card-action": HTMLSampleCardActionElement;
         "sample-input": HTMLSampleInputElement;
     }
 }
@@ -73,6 +120,39 @@ declare namespace LocalJSX {
          */
         "type"?: ButtonVariant;
     }
+    interface SampleCard {
+        /**
+          * Headline for the card surface.
+          * @default 'Heading'
+         */
+        "heading"?: string;
+        /**
+          * Status badge label rendered in the header.
+          * @default 'Draft'
+         */
+        "status"?: string;
+        /**
+          * Supporting summary text displayed beneath the heading.
+          * @default 'Summary text goes here.'
+         */
+        "summary"?: string;
+    }
+    interface SampleCardAction {
+        /**
+          * Optional link target for the action.
+         */
+        "href"?: string;
+        /**
+          * Text label displayed for the action.
+          * @default 'Action'
+         */
+        "label"?: string;
+        /**
+          * Visual variant for the action control.
+          * @default 'primary'
+         */
+        "variant"?: ActionVariant;
+    }
     interface SampleInput {
         /**
           * Label displayed above the input field.
@@ -88,6 +168,8 @@ declare namespace LocalJSX {
     interface IntrinsicElements {
         "my-component": MyComponent;
         "sample-button": SampleButton;
+        "sample-card": SampleCard;
+        "sample-card-action": SampleCardAction;
         "sample-input": SampleInput;
     }
 }
@@ -97,6 +179,8 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "my-component": LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
             "sample-button": LocalJSX.SampleButton & JSXBase.HTMLAttributes<HTMLSampleButtonElement>;
+            "sample-card": LocalJSX.SampleCard & JSXBase.HTMLAttributes<HTMLSampleCardElement>;
+            "sample-card-action": LocalJSX.SampleCardAction & JSXBase.HTMLAttributes<HTMLSampleCardActionElement>;
             "sample-input": LocalJSX.SampleInput & JSXBase.HTMLAttributes<HTMLSampleInputElement>;
         }
     }
